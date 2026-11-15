@@ -34,6 +34,9 @@ final class Boost {
 
     var headroom: CGFloat { screen?.maximumExtendedDynamicRangeColorComponentValue ?? 1 }
 
+    /// False on Macs without an XDR panel (MacBook Air, older MacBook Pro): no headroom to unlock.
+    var supportsXDR: Bool { (screen?.maximumPotentialExtendedDynamicRangeColorComponentValue ?? 1) > 1.0 }
+
     static func displayID(of screen: NSScreen) -> CGDirectDisplayID {
         screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID ?? 0
     }
@@ -60,9 +63,10 @@ final class Boost {
 
     /// After wake or a display change: bring back the trigger window if the system dropped it and
     /// re-assert the current factor. No off/on cycle, so the ramp does not restart on every notification.
-    func refresh() {
+    /// `force` (the Refresh menu item) rebuilds the trigger window even if it looks fine.
+    func refresh(force: Bool = false) {
         guard isOn, let screen else { return }
-        if window == nil || window?.isVisible == false || window?.screen != screen {
+        if force || window == nil || window?.isVisible == false || window?.screen != screen {
             window?.orderOut(nil)
             showTrigger(on: screen)
         }

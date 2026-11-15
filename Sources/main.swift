@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let slider = NSSlider(value: Boost.peakNits, minValue: Boost.sdrMaxNits, maxValue: Boost.peakNits,
                                   target: nil, action: nil)
     private let statusLine = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private let refreshItem = NSMenuItem(title: "Refresh boost", action: #selector(refreshBoost), keyEquivalent: "r")
     private let loginItem = NSMenuItem(title: "Open at login", action: #selector(toggleLogin), keyEquivalent: "")
     private var autoOffReason: String?
 
@@ -53,6 +54,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         sliderItem.view = holder
         menu.addItem(sliderItem)
         menu.addItem(statusLine)
+        refreshItem.target = self
+        menu.addItem(refreshItem)
         menu.addItem(.separator())
         loginItem.target = self
         menu.addItem(loginItem)
@@ -87,6 +90,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggle() { setOn(!boost.isOn) }
 
+    /// Applies the slider value and re-creates the HDR trigger (also fixes a boost lost after wake).
+    @objc private func refreshBoost() {
+        boost.refresh(force: true)
+        updateUI()
+    }
+
     /// Open at login is on by default: register once on first launch, then respect the menu toggle.
     private func applyLoginDefault() {
         let key = "loginDefaultApplied"
@@ -117,7 +126,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let symbol = boost.isOn ? "sun.max.fill" : "sun.max"
         item.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: "XDR Boost")
         toggleItem.state = boost.isOn ? .on : .off
-        toggleItem.isEnabled = boost.screen != nil
+        toggleItem.isEnabled = boost.supportsXDR
+        refreshItem.isEnabled = boost.isOn
         sliderLabel.title = "Max brightness: \(Int(slider.doubleValue)) nits"
         statusLine.title = statusText()
         let login = SMAppService.mainApp.status
@@ -126,7 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func statusText() -> String {
-        if boost.screen == nil { return "No built-in XDR display" }
+        if !boost.supportsXDR { return "No XDR display on this Mac" }
         if boost.isOn {
             let light = pow(Double(boost.appliedFactor), Boost.panelGamma)
             return "On, 0 to \(Int(slider.doubleValue)) nits (light x\(String(format: "%.1f", light)))"
