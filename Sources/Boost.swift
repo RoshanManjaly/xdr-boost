@@ -14,7 +14,11 @@ final class Boost {
     private(set) var isOn = false
     /// Brightness that the top of the system slider maps to, 500...1600 nits.
     /// The boost is a fixed ratio, so auto-brightness keeps working across 0...topNits.
-    var topNits: Double = peakNits { didSet { if isOn { applyGamma() } } }
+    /// Default top: (1130 / 500) ^ (1 / 2.32) = x1.42. Keeps large bright areas near the ~1,100-nit
+    /// full-screen ceiling, so colors stay clean. The slider still goes to 1,600.
+    static let defaultNits = 1130.0
+    /// The tick loop ramps toward a new value within ~0.1 s per 0.02 of factor.
+    var topNits: Double = defaultNits
 
     private var window: NSWindow?
     private var baseTable: (r: [CGGammaValue], g: [CGGammaValue], b: [CGGammaValue])?
@@ -37,7 +41,7 @@ final class Boost {
         CGDisplayRestoreColorSyncSettings()
         baseTable = readTable(Self.displayID(of: screen))
         showTrigger(on: screen)
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in self?.tick() }
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in self?.tick() }
     }
 
     func disable() {
@@ -58,13 +62,20 @@ final class Boost {
         enable()
     }
 
+    /// Largest factor change per 0.1 s tick: x1.0 -> x1.42 takes about 2 s. The slow ramp keeps colors
+    /// from washing out while the panel's headroom catches up.
+    static let rampStep: Float = 0.02
+
     private func tick() {
         guard isOn, let screen else { return }
         let target = targetFactor()
+        let step = max(-Self.rampStep, min(Self.rampStep, target - appliedFactor))
         let current = readTable(Self.displayID(of: screen)).r.max() ?? 1
-        // Re-apply when headroom moved (ambient light) or something reset the gamma.
-        if abs(target - appliedFactor) > 0.02 || abs(current - appliedFactor * (baseTable?.r.max() ?? 1)) > 0.05 {
-            applyGamma()
+        // Ramp toward the target (it moves with headroom), and re-apply if something reset the gamma.
+        if abs(step) > 0.001 {
+            applyGamma(appliedFactor + step)
+        } else if abs(current - appliedFactor * (baseTable?.r.max() ?? 1)) > 0.05 {
+            applyGamma(appliedFactor)
         }
     }
 
@@ -82,9 +93,8 @@ final class Boost {
 
     private func targetFactor() -> Float { Float(pow(linearFactor, 1 / Self.panelGamma)) }
 
-    private func applyGamma() {
+    private func applyGamma(_ f: Float) {
         guard let screen, let base = baseTable else { return }
-        let f = targetFactor()
         let n = UInt32(base.r.count)
         let err = CGSetDisplayTransferByTable(Self.displayID(of: screen), n,
                                               base.r.map { $0 * f }, base.g.map { $0 * f }, base.b.map { $0 * f })

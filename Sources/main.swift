@@ -16,7 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ note: Notification) {
         let saved = UserDefaults.standard.double(forKey: "topNits")
-        let top = saved >= Boost.sdrMaxNits ? saved : Boost.peakNits
+        let top = saved >= Boost.sdrMaxNits ? saved : Boost.defaultNits
         slider.doubleValue = top
         boost.topNits = top
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -41,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         slider.action = #selector(sliderChanged)
         slider.isContinuous = true
         slider.numberOfTickMarks = 12
-        slider.allowsTickMarkValuesOnly = true
+        slider.allowsTickMarkValuesOnly = false
         slider.frame = NSRect(x: 18, y: 4, width: 200, height: 22)
         let holder = NSView(frame: NSRect(x: 0, y: 0, width: 236, height: 30))
         holder.addSubview(slider)
@@ -103,6 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func sliderChanged() {
+        slider.doubleValue = (slider.doubleValue / 10).rounded() * 10
         boost.topNits = slider.doubleValue
         UserDefaults.standard.set(slider.doubleValue, forKey: "topNits")
         updateUI()
@@ -123,7 +124,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func statusText() -> String {
         if boost.screen == nil { return "No built-in XDR display" }
         if boost.isOn {
-            return "On, 0 to \(Int(slider.doubleValue)) nits (gamma x\(String(format: "%.2f", boost.appliedFactor)))"
+            let light = pow(Double(boost.appliedFactor), Boost.panelGamma)
+            return "On, 0 to \(Int(slider.doubleValue)) nits (light x\(String(format: "%.1f", light)))"
         }
         if let r = autoOffReason { return "Turned off automatically (\(r))" }
         return "Off"
