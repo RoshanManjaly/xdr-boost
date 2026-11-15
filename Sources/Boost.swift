@@ -23,6 +23,9 @@ final class Boost {
     private var window: NSWindow?
     private var baseTable: (r: [CGGammaValue], g: [CGGammaValue], b: [CGGammaValue])?
     private(set) var appliedFactor: Float = 1
+    /// Called when another app keeps resetting the gamma table; the boost turns off.
+    var onConflict: (() -> Void)?
+    private var resets: [Date] = []
     private var timer: Timer?
 
     var screen: NSScreen? {
@@ -55,11 +58,15 @@ final class Boost {
         appliedFactor = 1
     }
 
-    /// Re-run after wake or a display change: the system may drop the window or reset gamma.
+    /// After wake or a display change: bring back the trigger window if the system dropped it and
+    /// re-assert the current factor. No off/on cycle, so the ramp does not restart on every notification.
     func refresh() {
-        guard isOn else { return }
-        disable()
-        enable()
+        guard isOn, let screen else { return }
+        if window == nil || window?.isVisible == false || window?.screen != screen {
+            window?.orderOut(nil)
+            showTrigger(on: screen)
+        }
+        applyGamma(appliedFactor)
     }
 
     /// Largest factor change per 0.1 s tick: x1.0 -> x1.42 takes about 2 s. The slow ramp keeps colors
@@ -75,6 +82,15 @@ final class Boost {
         if abs(step) > 0.001 {
             applyGamma(appliedFactor + step)
         } else if abs(current - appliedFactor * (baseTable?.r.max() ?? 1)) > 0.05 {
+            // Something else wrote the table. Once is normal (wake, Night Shift); 4 times in 10 s is a fight.
+            let now = Date()
+            resets = resets.filter { now.timeIntervalSince($0) < 10 } + [now]
+            if resets.count >= 4 {
+                resets = []
+                disable()
+                onConflict?()
+                return
+            }
             applyGamma(appliedFactor)
         }
     }

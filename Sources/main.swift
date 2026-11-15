@@ -23,6 +23,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         item.menu = buildMenu()
         observeSystem()
         power.onEnterLow = { [weak self] in self?.autoOff() }
+        boost.onConflict = { [weak self] in
+            self?.autoOffReason = "another app keeps resetting the display; quit other brightness or color apps"
+            self?.updateUI()
+        }
         power.start()
         applyLoginDefault()
         if CommandLine.arguments.contains("--on") { setOn(true) }
