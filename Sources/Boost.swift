@@ -87,8 +87,9 @@ final class Boost {
         fflush(stdout)
     }
 
+    /// 256 entries: writes built from a 1024-entry read were silently ignored in testing.
     private func readTable(_ id: CGDirectDisplayID) -> (r: [CGGammaValue], g: [CGGammaValue], b: [CGGammaValue]) {
-        let cap: UInt32 = 1024
+        let cap: UInt32 = 256
         var r = [CGGammaValue](repeating: 0, count: Int(cap)), g = r, b = r
         var count: UInt32 = 0
         CGGetDisplayTransferByTable(id, cap, &r, &g, &b, &count)
