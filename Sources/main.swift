@@ -150,6 +150,16 @@ extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) { updateUI() }
 }
 
+// uninstall.sh runs the binary with --unregister to remove the login item before deleting the app.
+// The async form: the synchronous call waits on the main run loop, which is not running yet here.
+if CommandLine.arguments.contains("--unregister") {
+    SMAppService.mainApp.unregister { error in
+        print(error.map { "login item: \($0.localizedDescription)" } ?? "login item: removed")
+        exit(0)
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 10) { print("login item: timed out"); exit(1) }
+    dispatchMain()
+}
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
