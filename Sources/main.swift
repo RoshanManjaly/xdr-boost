@@ -1,5 +1,6 @@
 // XDR Boost: menu-bar toggle for the built-in XDR panel's extra brightness.
 import AppKit
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let boost = Boost()
@@ -10,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let slider = NSSlider(value: Boost.peakNits, minValue: Boost.sdrMaxNits, maxValue: Boost.peakNits,
                                   target: nil, action: nil)
     private let statusLine = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private let loginItem = NSMenuItem(title: "Open at login", action: #selector(toggleLogin), keyEquivalent: "")
     private var autoOffReason: String?
 
     func applicationDidFinishLaunching(_ note: Notification) {
@@ -22,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         observeSystem()
         power.onEnterLow = { [weak self] in self?.autoOff() }
         power.start()
+        applyLoginDefault()
         if CommandLine.arguments.contains("--on") { setOn(true) }
         updateUI()
     }
@@ -47,6 +50,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(sliderItem)
         menu.addItem(statusLine)
         menu.addItem(.separator())
+        loginItem.target = self
+        menu.addItem(loginItem)
         menu.addItem(NSMenuItem(title: "Quit XDR Boost", action: #selector(NSApp.terminate(_:)), keyEquivalent: "q"))
         return menu
     }
@@ -78,6 +83,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggle() { setOn(!boost.isOn) }
 
+    /// Open at login is on by default: register once on first launch, then respect the menu toggle.
+    private func applyLoginDefault() {
+        let key = "loginDefaultApplied"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        try? SMAppService.mainApp.register()
+    }
+
+    @objc private func toggleLogin() {
+        let service = SMAppService.mainApp
+        do {
+            if service.status == .enabled { try service.unregister() } else { try service.register() }
+        } catch {
+            NSLog("XDR Boost: login item change failed: \(error.localizedDescription)")
+        }
+        if service.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
+        updateUI()
+    }
+
     @objc private func sliderChanged() {
         boost.topNits = slider.doubleValue
         UserDefaults.standard.set(slider.doubleValue, forKey: "topNits")
@@ -91,6 +115,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         toggleItem.isEnabled = boost.screen != nil
         sliderLabel.title = "Max brightness: \(Int(slider.doubleValue)) nits"
         statusLine.title = statusText()
+        let login = SMAppService.mainApp.status
+        loginItem.state = login == .enabled ? .on : .off
+        loginItem.title = login == .requiresApproval ? "Open at login (approve in System Settings)" : "Open at login"
     }
 
     private func statusText() -> String {
