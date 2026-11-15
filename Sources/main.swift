@@ -3,12 +3,14 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let boost = Boost()
+    private let power = PowerWatch()
     private var item: NSStatusItem!
     private let toggleItem = NSMenuItem(title: "Boost brightness", action: #selector(toggle), keyEquivalent: "b")
     private let sliderLabel = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let slider = NSSlider(value: Boost.peakNits, minValue: Boost.sdrMaxNits, maxValue: Boost.peakNits,
                                   target: nil, action: nil)
     private let statusLine = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private var autoOffReason: String?
 
     func applicationDidFinishLaunching(_ note: Notification) {
         let saved = UserDefaults.standard.double(forKey: "topNits")
@@ -18,6 +20,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.menu = buildMenu()
         observeSystem()
+        power.onEnterLow = { [weak self] in self?.autoOff() }
+        power.start()
         if CommandLine.arguments.contains("--on") { setOn(true) }
         updateUI()
     }
@@ -61,6 +65,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setOn(_ on: Bool) {
         on ? boost.enable() : boost.disable()
+        if on { autoOffReason = nil }
+        updateUI()
+    }
+
+    private func autoOff() {
+        guard boost.isOn else { return }
+        autoOffReason = power.reason
+        boost.disable()
         updateUI()
     }
 
@@ -86,6 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if boost.isOn {
             return "On, 0 to \(Int(slider.doubleValue)) nits (gamma x\(String(format: "%.2f", boost.appliedFactor)))"
         }
+        if let r = autoOffReason { return "Turned off automatically (\(r))" }
         return "Off"
     }
 }
