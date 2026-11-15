@@ -68,13 +68,19 @@ final class Boost {
         }
     }
 
-    /// Ratio topNits / 500, capped by the headroom macOS grants right now.
+    /// The gamma table holds encoded values: light gain = factor ^ 2.32. Measured 2026-11-15 with an
+    /// ambient light sensor facing the panel: x1.30 -> 1.84x, x1.59 -> 2.92x, x2.00 -> 4.98x light.
+    /// A 25% white patch at x1.65 with the slider at 100% measured 3.20x, about 1600 nits.
+    static let panelGamma = 2.32
+
+    /// Light ratio (topNits / 500), capped by the headroom macOS grants right now, so no channel clips.
+    /// Scaling the table by the headroom itself (x3.2 = ~15x light) clipped and washed out color.
     var linearFactor: Double {
         let ratio = max(topNits, Self.sdrMaxNits) / Self.sdrMaxNits
         return min(ratio, max(Double(headroom), 1))
     }
 
-    private func targetFactor() -> Float { Float(linearFactor) }
+    private func targetFactor() -> Float { Float(pow(linearFactor, 1 / Self.panelGamma)) }
 
     private func applyGamma() {
         guard let screen, let base = baseTable else { return }
