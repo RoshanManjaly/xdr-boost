@@ -1,145 +1,201 @@
-# XDR Boost
+<p align="center">
+  <img src="assets/icon.png" width="128" height="128" alt="XDR Boost icon">
+</p>
 
-A small macOS menu-bar app that unlocks the extra brightness of a MacBook Pro's Liquid Retina XDR
-display: everyday (SDR) content above the normal 500-nit limit, up to about 1,600 nits on
-highlights.
+<h1 align="center">XDR Boost</h1>
 
-- One toggle in the menu bar, a 500 to 1,600 nit slider, and a Refresh button.
-- The default, 1,130, keeps large bright areas near the panel's full-screen ceiling, so colors stay
-  clean.
-- Keeps macOS auto-brightness working: the boost scales whatever the system slider is doing.
-- Turns itself off on Low Power Mode or at 20% battery or less, and you can turn it back on.
-- Opens at login (toggle in the menu). Quitting returns the display to normal.
-- About 400 lines of Swift, public macOS APIs only, MIT licensed.
+<p align="center">
+  Let everyday apps use the extra brightness of your MacBook Pro's XDR display, not just HDR video.
+</p>
 
-## Requirements
+<p align="center">
+  <a href="https://github.com/RoshanManjaly/xdr-boost/releases/latest"><img src="https://img.shields.io/github/v/release/RoshanManjaly/xdr-boost?style=flat-square" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square" alt="macOS 14 or later">
+  <img src="https://img.shields.io/badge/Mac-Apple%20silicon%20MacBook%20Pro-555?style=flat-square" alt="Apple silicon MacBook Pro">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/RoshanManjaly/xdr-boost?style=flat-square" alt="MIT license"></a>
+</p>
 
-- Apple silicon MacBook Pro with a Liquid Retina XDR display (14-inch or 16-inch, 2021 or later).
-- macOS 14 or later.
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#use">Use</a> ·
+  <a href="#faq">FAQ</a> ·
+  <a href="docs/HOW-IT-WORKS.md">How it works</a> ·
+  <a href="docs/MEASUREMENTS.md">Measurements</a>
+</p>
 
-Other Macs (MacBook Air, Mac mini, iMac) have no XDR headroom. The app runs there but shows
-"No XDR display on this Mac".
+<p align="center">
+  <img src="docs/images/menu.png" width="409" alt="XDR Boost menu: Boost brightness switch, max brightness slider set to 1130 nits, status line, Refresh boost, Open at login, Quit">
+</p>
+
+MacBook Pros with a Liquid Retina XDR display hold normal content to 500 nits. The panel can reach
+1,600 nits, but macOS keeps that range for HDR video and photos. XDR Boost lets everything on
+screen use it. It's a menu-bar app with under 400 lines of Swift.
+
+- Turn it on and off from the menu bar. Quitting puts the display back to normal.
+- Pick the top brightness from 500 to 1,600 nits. The default, 1,130, keeps large bright areas
+  near the panel's full-screen ceiling, so colors stay clean.
+- Auto-brightness keeps working, because the boost scales whatever the brightness slider is doing.
+- It turns itself off in Low Power Mode or at 20% battery or less. You can turn it back on.
+- It opens at login unless you turn that off.
+- Public macOS APIs only, MIT licensed.
 
 ## Install
 
-1. Download `XDRBoost-1.0.zip` from [Releases](https://github.com/RoshanManjaly/xdr-boost/releases)
-   and unzip it.
-2. In Terminal:
+```bash
+curl -fsSL https://raw.githubusercontent.com/RoshanManjaly/xdr-boost/main/install.sh | bash
+```
 
-   ```bash
-   bash ~/Downloads/XDRBoost/install.sh
-   ```
+This downloads the latest release, installs `XDRBoost.app` to `~/Applications` and starts it.
+[install.sh](install.sh) is short if you want to read it first.
 
-   It installs to `~/Applications/XDRBoost.app` (set `XDRBOOST_DEST` to choose another folder),
-   removes the download quarantine flag and starts the app.
+Then click the sun icon in the menu bar and turn on **Boost brightness**. The screen gets brighter
+over about 2 seconds.
 
-The app is ad-hoc signed, not notarized by Apple, so double-clicking a downloaded copy may be
-blocked by Gatekeeper. The install script avoids that. If you prefer, build it yourself (below).
+You need an Apple silicon MacBook Pro with an XDR display (14- or 16-inch, 2021 or later) and
+macOS 14 or later. On other Macs the app runs but says "No XDR display on this Mac".
+
+To install by hand, download `XDRBoost.zip` from
+[Releases](https://github.com/RoshanManjaly/xdr-boost/releases/latest), unzip it and run
+`bash ~/Downloads/XDRBoost/install.sh`. Set `XDRBOOST_DEST` to install somewhere other than
+`~/Applications`.
+
+XDR Boost is ad-hoc signed, not notarized by Apple. Both install routes get past Gatekeeper on
+their own. If you copy the app somewhere yourself and macOS refuses to open it, run
+`xattr -dr com.apple.quarantine /path/to/XDRBoost.app`, or use **Open Anyway** in System Settings
+> Privacy & Security.
 
 ## Use
 
-Click the sun icon in the menu bar. If you use a menu bar manager such as Bartender, the icon may
-start in its hidden section.
+Click the sun icon in the menu bar. A menu bar manager such as Bartender or Ice may hide it at
+first.
 
 | Menu item | What it does |
 |---|---|
-| Boost brightness | Turns the boost on or off (the icon fills in when on). |
-| Max brightness slider | 500 to 1,600 nits. **1130 (default)** keeps colors clean. **1600** gives the full ~1,600-nit highlights. |
-| Refresh boost | Applies the slider value now and re-creates the boost (also fixes a boost lost after sleep). |
+| Boost brightness | Turns the boost on or off. The icon fills in while it's on. |
+| Max brightness | Slider from 500 to 1,600 nits. 1,130 is the default. 1,600 gives the brightest highlights. |
+| Refresh boost | Applies the slider now (otherwise it applies when the menu closes). It also brings the boost back if it drops out after sleep. |
 | Open at login | On by default. |
 
-A full white screen stays near 1,100 nits at any setting. That is the panel's own limit (see
-below), not the app's.
+If the boost turns itself off, the grey status line under the slider says why.
 
-## How it works
+## FAQ
 
-Two steps:
+### Is it safe for my display?
 
-1. A tiny 2 x 2 point HDR window makes macOS treat the screen as showing HDR content, so it raises
-   the backlight and opens up to 3.2x of headroom.
-2. The display's gamma table is multiplied by a factor above 1.0 so normal content uses that
-   headroom. The table is gamma-encoded, so light = factor ^ 2.32. The app picks
-   `factor = (top / 500) ^ (1 / 2.32)`, never more than the headroom allows, and ramps in over
-   about a second so colors do not flash.
+XDR Boost doesn't touch firmware or private display settings. It shows a tiny HDR window and scales
+the gamma table, both through public APIs, and macOS stays in charge of the backlight. Brighter
+means more heat and battery use, and macOS may dim the panel if it gets too warm. There is
+no warranty, as the [license](LICENSE) says.
 
-Details: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
+### Why doesn't a full white screen reach 1,600 nits?
+
+The panel can't hold that across the whole screen. 1,600 nits is a peak for part of the screen. A
+full white screen measured about 1,100 nits for XDR Boost at 1,600 and for native HDR alike, and the panel's
+own HDR preset lists 1,000 nits full-screen sustained.
+
+### Why is the default 1,130 and not 1,600?
+
+1,130 gives a factor of x1.42. That keeps large bright areas near the panel's ~1,100-nit
+full-screen ceiling instead of past it, so colors stay clean. It's also the level I liked best day
+to day. Move the slider to 1,600 if you want the brightest highlights.
+
+### Can I run it alongside other display apps?
+
+Not with another app that writes the gamma table, such as another brightness booster. Both undo
+each other. If another app keeps resetting the table, XDR Boost turns itself off and the status line
+names the likely cause.
+
+### Does it work with f.lux, Night Shift or calibration tools?
+
+They can change the same gamma table, so they may conflict with the boost.
+
+### Will it work on my Mac?
+
+It's been tested on one Mac (below). Other 14- and 16-inch XDR MacBook Pros should work, but the
+nit numbers may differ. If you try it, a
+[compatibility report](https://github.com/RoshanManjaly/xdr-boost/issues/new?template=compatibility.yml)
+helps the next person.
 
 ## Measured results
 
-Measured on the test Mac with a second MacBook's ambient light sensor as a light meter
-([methodology and all data](docs/MEASUREMENTS.md)):
+Light ratios measured with a second MacBook's ambient light sensor, converted to nits by taking
+normal white as 500 nits. Brightness slider at 100%. Method and raw numbers:
+[docs/MEASUREMENTS.md](docs/MEASUREMENTS.md).
 
-| | 25% of the screen white | Full screen white |
+| Setting | 25% of the screen white | Full screen white |
 |---|---|---|
-| Boost off (slider 100%) | 500 nits | 500 nits |
-| XDR Boost at 1130 (default) | ~1,081 nits | ~1,061 nits |
-| XDR Boost at 1600 | ~1,600 nits | ~1,093 nits |
-| Native HDR video white | ~1,610 nits | ~1,102 nits |
+| Boost off | 500 nits | 500 nits |
+| XDR Boost at 1,130 (default) | ~1,080 nits | ~1,060 nits |
+| XDR Boost at 1,600 | ~1,600 nits | ~1,090 nits |
+| Native HDR, for comparison | ~1,610 nits | ~1,100 nits |
 
-## How it came to be
+## How it works
 
-I wanted my MacBook Pro's display above 500 nits for everyday work, toward the panel's 1,600-nit
-peak, in a tiny menu-bar app.
+A 2 x 2 point HDR window makes macOS open up the panel's HDR headroom. The display's gamma table is
+then scaled so normal content uses that headroom, by a factor taken from a measured curve so bright
+colors don't clip. Details: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
 
-The work was done in Claude Code with the REA reverse-engineering toolkit: working out how macOS
-grants HDR headroom, and then testing on the real panel. The first version scaled the gamma table
-by the full headroom (x3.2) and washed out colors. Getting it right took measurement: a
-second MacBook sat facing the screen, its ambient light sensor used as a light meter and its webcam
-used to photograph color swatches. That showed:
+## Background
 
-- The gamma table is gamma-encoded (light = factor ^ 2.32), so x3.2 asked for about 15x the light
-  and clipped every bright color.
-- Writes built from a 1,024-entry gamma table were silently ignored; 256 entries work.
-- A full white screen tops out near 1,100 nits for any method, including native HDR video.
-  1,600 nits is a highlight peak.
-- A factor of x1.42 (1,130 nits) keeps large bright areas near that full-screen limit instead of
-  past it, so colors stay clean. XDR Boost now defaults to that level.
+I wanted my MacBook Pro's display above 500 nits for everyday work.
 
-The commit history follows those iterations, from the first prototype to v1.0.
+I built XDR Boost in Claude Code with the REA reverse-engineering toolkit. I worked out how macOS
+grants HDR headroom, then tested on the panel. My first version scaled the gamma table by the full
+headroom (x3.2) and washed out colors. To find out why, I pointed a second MacBook at the
+screen and used its ambient light sensor as a light meter and its webcam to check colors. That
+turned up three things:
+
+- The gamma table is gamma-encoded, so light rises as factor ^ 2.32. A factor of x3.2 asked for
+  about 15x the light, and bright colors clipped.
+- On macOS 26, gamma tables built from a 1,024-entry read were ignored. 256 entries work.
+- A full white screen stopped near 1,100 nits for every method I tried, native HDR included.
+  1,600 nits only shows on part of the screen.
+
+The commit history follows the same steps, from the first prototype to the current release.
 
 ## Tested on
 
-| | |
-|---|---|
-| Mac | MacBook Pro 16-inch (2021), Apple M1 Max (MacBookPro18,2) |
-| Display | Built-in Liquid Retina XDR, preset "Apple XDR Display (P3-1600 nits)" |
-| macOS | 26.7.2 (25G332) |
-| Measurement rig | a second MacBook's ambient light sensor and webcam facing the screen |
+- MacBook Pro 16-inch (2021), Apple M1 Max (MacBookPro18,2), built-in Liquid Retina XDR display
+- macOS 26.7.2 (25G332)
 
-Other XDR MacBook Pros share the 1,600-nit peak panel and should behave the same. Newer models
-with a higher SDR maximum may land at slightly different nits. Reports are welcome.
+## Limits
 
-## Caveats
-
-- Do not run another brightness booster at the same time. Both write the gamma table. XDR Boost
-  turns itself off if another app keeps resetting it.
-- Night Shift, f.lux and display calibration also use the gamma table and can conflict.
-- HDR video highlights are compressed while the boost is on.
-- More brightness means more power use and heat.
+- Only the built-in XDR display is boosted. External displays are left alone.
+- HDR video probably loses some highlight detail while the boost is on. I haven't measured it.
+- The nit values come from a light sensor and a 500-nit reference, not a calibrated meter.
 
 ## Build from source
 
-Needs the Xcode command line tools (`xcode-select --install`).
+You need the Xcode command line tools (`xcode-select --install`).
 
 ```bash
-./build.sh              # builds build/XDRBoost.app and installs it to ~/Applications
-./build.sh --no-install # build only
-./package.sh            # builds build/XDRBoost-<version>.zip with install and uninstall scripts
+./build.sh               # build and install to ~/Applications
+./build.sh --no-install  # build only, to build/XDRBoost.app
+./package.sh             # build/XDRBoost.zip, the release asset
 ```
 
-Measurement tools are in [tools/](tools/).
+The tools used for the measurements are in [tools/](tools/).
 
 ## Uninstall
 
 ```bash
-bash uninstall.sh   # from the release zip: removes the login item, the app and its settings
+curl -fsSL https://raw.githubusercontent.com/RoshanManjaly/xdr-boost/main/dist/uninstall.sh | bash
 ```
+
+This quits the app, removes the login item, deletes `~/Applications/XDRBoost.app` and clears its
+settings. The release zip has the same script as `uninstall.sh`.
+
+## Contributing
+
+Bug reports and compatibility reports help most right now. The issue forms ask for your Mac model
+and macOS version. Pull requests are welcome. Please say which Mac you tested on. For security
+problems, see [SECURITY.md](SECURITY.md).
 
 ## Credits
 
-- [BrightIntosh](https://github.com/niklasr22/BrightIntosh) by Niklas Rousset, a useful reference for
-  the HDR trigger technique and its brightness factors. No BrightIntosh code is included.
+- [BrightIntosh](https://github.com/niklasr22/BrightIntosh) by Niklas Rousset, a useful reference
+  for the HDR window technique. No BrightIntosh code is included.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[MIT](LICENSE)
