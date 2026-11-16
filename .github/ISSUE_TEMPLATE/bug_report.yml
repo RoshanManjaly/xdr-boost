@@ -1,0 +1,43 @@
+name: Bug report
+description: Something doesn't work or looks wrong.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac model
+      description: From Apple menu > About This Mac.
+      placeholder: MacBook Pro 14-inch, M3 Pro, 2023
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "26.7.2"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: XDR Boost version
+      description: "Run: plutil -extract CFBundleShortVersionString raw ~/Applications/XDRBoost.app/Contents/Info.plist"
+      placeholder: "1.0.1"
+  - type: input
+    id: status
+    attributes:
+      label: Status line
+      description: The grey line under the slider in the menu.
+      placeholder: On, 0 to 1130 nits (light x2.3)
+  - type: input
+    id: others
+    attributes:
+      label: Other display apps running
+      description: BetterDisplay, f.lux, Night Shift, calibration tools, other brightness apps, or none.
