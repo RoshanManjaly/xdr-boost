@@ -5,11 +5,13 @@ set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
 APP="$DIR/build/XDRBoost.app"
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 swiftc -O -target arm64-apple-macos14.0 -o "$APP/Contents/MacOS/XDRBoost" "$DIR"/Sources/*.swift
+cp "$DIR/assets/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 /usr/bin/plutil -create xml1 "$APP/Contents/Info.plist"
 for kv in "CFBundleIdentifier=io.github.roshanmanjaly.xdrboost" "CFBundleName=XDR Boost" "CFBundleExecutable=XDRBoost" \
-          "CFBundlePackageType=APPL" "CFBundleShortVersionString=1.0" "CFBundleVersion=1" "LSMinimumSystemVersion=14.0"; do
+          "CFBundlePackageType=APPL" "CFBundleShortVersionString=1.0" "CFBundleVersion=1" "LSMinimumSystemVersion=14.0" \
+          "CFBundleIconFile=AppIcon"; do
   /usr/bin/plutil -insert "${kv%%=*}" -string "${kv#*=}" "$APP/Contents/Info.plist"
 done
 /usr/bin/plutil -insert LSUIElement -bool true "$APP/Contents/Info.plist"
