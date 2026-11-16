@@ -8,7 +8,7 @@ camera) faces the first one's screen.
 |---|---|---|
 | `als.c` | second Mac | Prints `epoch_ms lux` from the ambient light sensor (private `IOHIDEventSystemClient` API). |
 | `lumtest.swift` | Mac under test | Steps through black, white patches, full-screen white and native HDR white with optional gamma factors. Logs `epoch_ms step kind ...` per step. Uses the private DisplayServices API to set the brightness slider. |
-| `lum_join.py` | either | Joins the two logs by timestamp and prints each step's screen contribution (lux minus neighbouring black steps). |
+| `lum_join.py` | either | Joins the two logs by timestamp and prints each step's screen contribution (lux minus neighboring black steps). |
 
 ## Build
 
@@ -45,7 +45,7 @@ Step specs:
 
 Set `NOGAMMA=1` to leave the gamma table alone, for example to measure another app's boost.
 
-Pitfalls found along the way:
+Pitfalls:
 
 - Schedule each step from the previous one. Timers set far ahead get coalesced by the system and fire
   in pairs.

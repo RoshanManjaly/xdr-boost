@@ -1,16 +1,16 @@
-# How the XDR brightness unlock works
+# How it works
 
-MacBook Pros with a Liquid Retina XDR display cap normal (SDR) content at 500 nits, while the
-panel can reach 1,600 nits for HDR highlights. XDR Boost lets you push everyday content into that
-extra range.
+MacBook Pros with a Liquid Retina XDR display hold normal (SDR) content to 500 nits. The panel
+can reach 1,600 nits, but macOS keeps that range for HDR content. XDR Boost lets everyday
+content use it.
 
 I wanted my MacBook Pro's display above 500 nits for everyday work. I built XDR Boost in Claude
 Code with the REA reverse-engineering toolkit, worked out how macOS grants HDR headroom, and
-measured everything on the real panel. These notes describe how it works.
+measured everything on the real panel. It uses public macOS APIs.
 
-## The panel's own numbers
+## The panel's numbers
 
-The built-in display preset "Apple XDR Display (P3-1600 nits)" on the test Mac reports:
+The built-in display preset on the test Mac, "Apple XDR Display (P3-1600 nits)", reports:
 
 | Preset key | Value |
 |---|---|
@@ -19,35 +19,39 @@ The built-in display preset "Apple XDR Display (P3-1600 nits)" on the test Mac r
 | `PresetMaxHDRLuminance` | 1600 |
 | `PresetHostMaxPotentialEDRHeadroom` | 16 |
 
-The HDR Video preset on the same Mac describes the panel as "1000 nits (full-screen sustained)"
-and 1600 nits peak. That distinction matters later.
+The HDR Video preset on the same Mac lists the panel as "1000 nits (full-screen sustained)" with a
+1,600-nit peak.
 
-## XDR Brightness (public APIs)
+## Step 1: open the HDR headroom
 
-Two steps:
+A borderless 2 x 2 point window holds a `CAMetalLayer` set up for HDR:
+`wantsExtendedDynamicRangeContent = true`, pixel format `rgba16Float`, color space
+`extendedLinearITUR_2020`, `CAEDRMetadata.hdr10` metadata, and a fill brighter than white at 10%
+opacity. While that window is on screen, macOS treats the display as showing HDR content. It raises
+the backlight and grants extra headroom (`NSScreen.maximumExtendedDynamicRangeColorComponentValue`),
+up to 3.2 with the brightness slider at 100%.
 
-1. **Open the HDR headroom.** A borderless 2 x 2 point window holds a `CAMetalLayer` with
-   `wantsExtendedDynamicRangeContent = true`, pixel format `rgba16Float`, color space
-   `extendedLinearITUR_2020`, `CAEDRMetadata.hdr10` metadata, and a fill brighter than white
-   (the panel's potential headroom), at 10% opacity. Its presence tells macOS that HDR content is on
-   screen, so the system raises the backlight and reports extra headroom
-   (`NSScreen.maximumExtendedDynamicRangeColorComponentValue`, 3.2 at full slider brightness).
-2. **Push SDR content into it.** The display's gamma table
-   (`CGGetDisplayTransferByTable` / `CGSetDisplayTransferByTable`) is multiplied by a factor above
-   1.0. Values above 1.0 only take effect while the headroom from step 1 is open.
+## Step 2: push SDR content into it
 
-Turning it off restores the gamma table (`CGDisplayRestoreColorSyncSettings`) and closes the
-window. If the app crashes, macOS resets the gamma table when the process exits.
+The display's gamma table (`CGGetDisplayTransferByTable` / `CGSetDisplayTransferByTable`) is
+multiplied by a factor above 1.0. Values above 1.0 only show while the headroom from step 1 is open.
 
-## The open question: how big a factor?
+The table holds gamma-encoded values, so light output rises as factor ^ 2.32
+([measured](MEASUREMENTS.md#1-light--factor--232)). To raise white from 500 nits to a target `top`,
+XDR Boost uses:
 
-My first version multiplied the table by the full headroom (x3.2 at full brightness). On the test
-panel that washed out colors: bright, saturated colors drifted toward white. Finding out why, and
-what factor looks right, took measurement. See [MEASUREMENTS.md](MEASUREMENTS.md).
+    factor = (top / 500) ^ (1 / 2.32)
 
-## Limits that apply to any approach
+The light ratio is capped at the headroom macOS grants at that moment, so no channel clips. That
+gives x1.65 for 1,600 nits and x1.42 for the 1,130-nit default. The factor ramps in by 0.02 every
+0.1 s, about 2 s from off to the default.
 
-- 1,600 nits is a highlight peak. A full white screen stays near 1,000 to 1,100 nits.
-- Night Shift, f.lux and display calibration also own the gamma table and conflict with the boost.
-- HDR video highlights are compressed while the boost is on.
-- Only the built-in XDR panel is supported.
+Multiplying the table by the full headroom (x3.2) asks for about 15x the light from a panel with
+3.2x of headroom, so bright colors clip and wash out toward white.
+
+Two more details:
+
+- Gamma tables built from a 1,024-entry read were ignored on macOS 26 (the table read back
+  unchanged). Tables built from a 256-entry read work.
+- Turning the boost off calls `CGDisplayRestoreColorSyncSettings` and closes the window. macOS also
+  restores the gamma table when the app exits, including after a crash.
