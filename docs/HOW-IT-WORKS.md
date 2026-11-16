@@ -44,14 +44,14 @@ XDR Boost uses:
 
 The light ratio is capped at the headroom macOS grants at that moment, so no channel clips. That
 gives x1.65 for 1,600 nits and x1.42 for the 1,130-nit default. The factor ramps in by 0.02 every
-0.1 s, about 2 s from off to the default.
+0.1 s: about 2 s from off to the default, about 3.3 s to 1,600.
 
 Multiplying the table by the full headroom (x3.2) asks for about 15x the light from a panel with
 3.2x of headroom, so bright colors clip and wash out toward white.
 
 Two more details:
 
-- Gamma tables built from a 1,024-entry read were ignored on macOS 26 (the table read back
-  unchanged). Tables built from a 256-entry read work.
+- Gamma tables built from a 1,024-entry read were ignored on the test Mac (macOS 26.7.2). The table
+  read back unchanged. Tables built from a 256-entry read work.
 - Turning the boost off calls `CGDisplayRestoreColorSyncSettings` and closes the window. macOS also
   restores the gamma table when the app exits, including after a crash.

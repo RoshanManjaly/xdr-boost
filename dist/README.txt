@@ -25,10 +25,11 @@ Menu (sun icon in the menu bar)
 - Max brightness slider 500 to 1600 nits. 1130 (default) keeps big bright areas
                         near the panel's full-screen limit, so colors stay clean.
                         1600 gives about 1600 nits on highlights. A full white screen
-                        stays near 1100 nits on any setting (panel limit).
-- Refresh boost         applies the slider value now and re-creates the boost.
+                        tops out near 1100 nits (panel limit).
+- Refresh boost         rebuilds the HDR window and re-applies the boost (after sleep).
+                        Slider changes take effect when the menu closes.
 - Open at login         on by default.
-- Turns off by itself on Low Power Mode or at 20% battery or less (unplugged);
+- Turns off by itself in Low Power Mode or at 20% battery or less (unplugged);
   turn it back on from the menu.
 
 Notes

@@ -17,7 +17,6 @@ final class Boost {
     /// Default top: (1130 / 500) ^ (1 / 2.32) = x1.42. Keeps large bright areas near the ~1,100-nit
     /// full-screen ceiling, so colors stay clean. The slider still goes to 1,600.
     static let defaultNits = 1130.0
-    /// The tick loop ramps toward a new value within ~0.1 s per 0.02 of factor.
     var topNits: Double = defaultNits
 
     private var window: NSWindow?
@@ -73,8 +72,8 @@ final class Boost {
         applyGamma(appliedFactor)
     }
 
-    /// Largest factor change per 0.1 s tick: x1.0 -> x1.42 takes about 2 s. The slow ramp keeps colors
-    /// from washing out while the panel's headroom catches up.
+    /// Largest factor change per 0.1 s tick: x1.0 -> x1.42 takes about 2 s, x1.65 about 3.3 s. The slow ramp
+    /// keeps colors from washing out while the panel's headroom catches up.
     static let rampStep: Float = 0.02
 
     private func tick() {

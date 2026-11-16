@@ -35,7 +35,8 @@ screen use it. It's a menu-bar app with under 400 lines of Swift.
 - Pick the top brightness from 500 to 1,600 nits. The default, 1,130, keeps large bright areas
   near the panel's full-screen ceiling, so colors stay clean.
 - Auto-brightness keeps working, because the boost scales whatever the brightness slider is doing.
-- It turns itself off in Low Power Mode or at 20% battery or less. You can turn it back on.
+- It turns itself off in Low Power Mode, or at 20% battery or less while unplugged. You can turn it
+  back on.
 - It opens at login unless you turn that off.
 - Public macOS APIs only, MIT licensed.
 
@@ -61,8 +62,8 @@ To install by hand, download `XDRBoost.zip` from
 
 XDR Boost is ad-hoc signed, not notarized by Apple. Both install routes get past Gatekeeper on
 their own. If you copy the app somewhere yourself and macOS refuses to open it, run
-`xattr -dr com.apple.quarantine /path/to/XDRBoost.app`, or use **Open Anyway** in System Settings
-> Privacy & Security.
+`xattr -dr com.apple.quarantine /path/to/XDRBoost.app`, or click **Open Anyway** under
+System Settings, Privacy & Security.
 
 ## Use
 
@@ -73,10 +74,11 @@ first.
 |---|---|
 | Boost brightness | Turns the boost on or off. The icon fills in while it's on. |
 | Max brightness | Slider from 500 to 1,600 nits. 1,130 is the default. 1,600 gives the brightest highlights. |
-| Refresh boost | Applies the slider now (otherwise it applies when the menu closes). It also brings the boost back if it drops out after sleep. |
+| Refresh boost | Rebuilds the HDR window and re-applies the boost, for example after sleep. |
 | Open at login | On by default. |
 
-If the boost turns itself off, the grey status line under the slider says why.
+Slider changes take effect when the menu closes. If the boost turns itself off, the gray status line
+under the slider says why.
 
 ## FAQ
 
@@ -147,11 +149,13 @@ turned up three things:
 
 - The gamma table is gamma-encoded, so light rises as factor ^ 2.32. A factor of x3.2 asked for
   about 15x the light, and bright colors clipped.
-- On macOS 26, gamma tables built from a 1,024-entry read were ignored. 256 entries work.
-- A full white screen stopped near 1,100 nits for every method I tried, native HDR included.
-  1,600 nits only shows on part of the screen.
+- On the test Mac (macOS 26.7.2), gamma tables built from a 1,024-entry read were ignored. 256
+  entries work.
+- A full white screen stopped near 1,100 nits for every method I tried, native HDR included. The
+  default, 1,130 (x1.42), keeps large bright areas near that ceiling instead of past it.
 
-The commit history follows the same steps, from the first prototype to the current release.
+Each step is a commit in the [history](https://github.com/RoshanManjaly/xdr-boost/commits/main/),
+from the first prototype to the current release.
 
 ## Tested on
 

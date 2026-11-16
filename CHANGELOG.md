@@ -18,7 +18,7 @@ First release.
 - Menu-bar switch that opens the panel's HDR headroom and scales the gamma table so normal content
   uses it.
 - Slider from 500 to 1,600 nits. The default, 1,130, applies a factor of x1.42.
-- Ramps in over about 2 s.
-- Turns itself off in Low Power Mode, at 20% battery or less, or when another app keeps resetting
-  the gamma table.
+- Ramps in over about 2 s at the default.
+- Turns itself off in Low Power Mode, at 20% battery or less while unplugged, or when another app
+  keeps resetting the gamma table.
 - Refresh boost, open at login, and install and uninstall scripts.

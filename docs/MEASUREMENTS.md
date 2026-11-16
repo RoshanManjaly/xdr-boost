@@ -46,7 +46,7 @@ current headroom, with the gamma table left alone. That is how HDR content is dr
 | White area | Boost | Native HDR |
 |---|---|---|
 | 10% | ~1,120 nits | ~1,080 nits |
-| 25% | ~1,600 to 1,614 nits | ~1,608 to 1,619 nits |
+| 25% | 1,600-1,614 nits | 1,608-1,619 nits |
 | 50% | ~1,656 nits | ~1,665 nits |
 | 100% | ~1,093 nits | ~1,102 nits |
 

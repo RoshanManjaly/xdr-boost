@@ -34,7 +34,7 @@ body:
     id: status
     attributes:
       label: Status line
-      description: The grey line under the slider in the menu.
+      description: The gray line under the slider in the menu.
       placeholder: On, 0 to 1130 nits (light x2.3)
   - type: input
     id: others
