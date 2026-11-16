@@ -1,5 +1,5 @@
-XDR Boost 1.0
-=============
+XDR Boost
+=========
 
 Menu-bar app that unlocks the extra brightness of a MacBook Pro XDR display
 (above the normal 500-nit limit) for everyday apps, not just HDR video.
@@ -11,12 +11,13 @@ Requirements
   but shows "No XDR display on this Mac".
 
 Install
-1. Unzip XDRBoost-1.0.zip.
+1. Unzip XDRBoost.zip.
 2. In Terminal:  bash ~/Downloads/XDRBoost/install.sh   (use the folder you unzipped to)
    It installs to ~/Applications/XDRBoost.app, clears the download quarantine flag,
    and starts the app. To install somewhere else:
-   XDRBOOST_DEST=~/some/folder bash install.sh The app is not signed by Apple, so double-clicking it from a
-   download may be blocked; the install script avoids that.
+   XDRBOOST_DEST=~/some/folder bash install.sh
+   The app is ad-hoc signed, not notarized by Apple, so double-clicking a downloaded
+   copy may be blocked. The install script avoids that.
 3. The app opens at login by default.
 
 Menu (sun icon in the menu bar)
@@ -40,4 +41,4 @@ Notes
 Uninstall
   bash uninstall.sh   (removes the login item, the app and its settings)
 
-Source, measurements and the story: https://github.com/RoshanManjaly/xdr-boost
+Source and measurements: https://github.com/RoshanManjaly/xdr-boost
